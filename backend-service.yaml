@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort
+  ports:
+  - port: 5000  # Adjust this if your backend is on a different port
+    targetPort: 5000
+    nodePort: 30080  # Specify NodePort if needed
+  selector:
+    app: backend

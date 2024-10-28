@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Kodunuzu checkout yapın
+      - uses: actions/checkout@v2
+
+      # JDK Ayarları, eğer backend içeriyorsa
+      - name: JDK 17 Kurulumu
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Backend İçin Maven ile İnşa
+      - name: Backend Maven İnşası
+        run: mvn clean install -f backend/pom.xml
+
+      # Node.js Ayarları 
+      - name: Node.js Kurulumu (Frontend için)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # Ön Uygulama için Npm İnşası
+      - name: Frontend İnşası
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+  dockerize:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Docker Backend İmajı Oluşturma ve Yükleme
+      - name: Backend Docker İmajı
+        run: |
+          docker build -t yourdockerhubuser/backend:latest ./backend
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          docker push yourdockerhubuser/backend:latest
+
+      # Docker Frontend İmajı Oluşturma ve Yükleme
+      - name: Frontend Docker İmajı
+        run: |
+          docker build -t yourdockerhubuser/frontend:latest ./frontend
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          docker push yourdockerhubuser/frontend:latest

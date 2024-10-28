@@ -1,60 +1,62 @@
-name: CI/CD Pipeline
+name: .NET Core CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Kodunuzu checkout yapın
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      # JDK Ayarları, eğer backend içeriyorsa
-      - name: JDK 17 Kurulumu
-        uses: actions/setup-java@v2
-        with:
-          java-version: "17"
-          distribution: "temurin"
+    # .NET SDK'yi kur
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '7.0'
 
-      # # Backend İçin Maven ile İnşa
-      # - name: Backend Maven İnşası
-      #   run: mvn clean install -f api/pom.xml
+    # Backend Projesini İnşa Et
+    - name: Build Backend
+      run: dotnet build project2-3-tier-application/api/Basic3TierAPI/Basic3TierAPI.csproj
 
-      # Node.js Ayarları
-      - name: Node.js Kurulumu (Frontend için)
-        uses: actions/setup-node@v2
-        with:
-          node-version: "14"
-
-      # Ön Uygulama için Npm İnşası
-      - name: Frontend İnşası
-        run: |
-          cd ui
-          npm install
-          npm run build
+    # Testleri Çalıştır
+    - name: Test Backend
+      run: dotnet test project2-3-tier-application/api/Tests/Basic3TierAPI.Tests/Basic3TierAPI.Tests.csproj
 
   dockerize:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      # Docker Backend İmajı Oluşturma ve Yükleme
-      - name: Backend Docker İmajı
-        run: |
-          docker build -t buraksefil17/3-tier-backend:latest ./api
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          docker push buraksefil17/3-tier-backend:latest
+    # Docker imajını oluştur ve Docker Hub'a yükle
+    - name: Build and push Backend Docker image
+      run: |
+        docker build -t buraksefil17/3-tier-backend:latest project2-3-tier-application/api/
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+        docker push buraksefil17/3-tier-backend:latest
 
-      # Docker Frontend İmajı Oluşturma ve Yükleme
-      - name: Frontend Docker İmajı
-        run: |
-          docker build -t buraksefil17/3-tier-frontend:latest ./ui
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          docker push buraksefil17/3-tier-frontend:latest
+    # Frontend için Node.js ve npm kur
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14'
+
+    # Frontend Projesini İnşa Et
+    - name: Build Frontend
+      run: |
+        cd project2-3-tier-application.UI
+        npm install
+        npm run build
+
+    # Frontend için Docker imajı oluştur ve Docker Hub'a yükle
+    - name: Build and push Frontend Docker image
+      run: |
+        docker build -t buraksefil17/3-tier-frontend:latest project2-3-tier-application/ui/
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+        docker push buraksefil17/3-tier-frontend:latest

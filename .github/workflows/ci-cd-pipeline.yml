@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -18,23 +18,23 @@ jobs:
       - name: JDK 17 Kurulumu
         uses: actions/setup-java@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
-      # Backend İçin Maven ile İnşa
-      - name: Backend Maven İnşası
-        run: mvn clean install -f backend/pom.xml
+      # # Backend İçin Maven ile İnşa
+      # - name: Backend Maven İnşası
+      #   run: mvn clean install -f api/pom.xml
 
-      # Node.js Ayarları 
+      # Node.js Ayarları
       - name: Node.js Kurulumu (Frontend için)
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: "14"
 
       # Ön Uygulama için Npm İnşası
       - name: Frontend İnşası
         run: |
-          cd frontend
+          cd ui
           npm install
           npm run build
 
@@ -48,13 +48,13 @@ jobs:
       # Docker Backend İmajı Oluşturma ve Yükleme
       - name: Backend Docker İmajı
         run: |
-          docker build -t yourdockerhubuser/backend:latest ./backend
+          docker build -t buraksefil17/3-tier-backend:latest ./api
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          docker push yourdockerhubuser/backend:latest
+          docker push buraksefil17/3-tier-backend:latest
 
       # Docker Frontend İmajı Oluşturma ve Yükleme
       - name: Frontend Docker İmajı
         run: |
-          docker build -t yourdockerhubuser/frontend:latest ./frontend
+          docker build -t buraksefil17/3-tier-frontend:latest ./ui
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-          docker push yourdockerhubuser/frontend:latest
+          docker push buraksefil17/3-tier-frontend:latest

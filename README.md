@@ -6,7 +6,7 @@ A cloud-native **3-tier web application** (frontend, backend, and database) depl
 
 ## 🏗️ Architecture
 
-```mermaid
+
 flowchart TD
     U[User] --> FE[Frontend Service]
     FE --> BE[Backend Service]

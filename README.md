@@ -61,6 +61,8 @@ CI/CD
 Push changes → GitHub Actions runs build & deploy pipeline automatically
 
 📌 Description
+
+
 What: Designed and deployed a 3-tier web application with cloud-native best practices.
 How: Built Docker images for frontend/backend, provisioned infra with Terraform, deployed workloads on Kubernetes, and automated delivery via GitHub Actions.
 Impact: Delivered a scalable, resilient, and production-ready architecture with reduced manual overhead and faster release cycles.
